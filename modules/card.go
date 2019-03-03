@@ -1,18 +1,29 @@
 package modules
 
-import "time"
+import (
+	"time"
 
-type Card struct {
+	"github.com/adlio/trello"
+)
+
+type MyCard struct {
 	ID                   string
 	Name                 string
 	TimeGuessForDone     int
 	TimeRealForDone      int
-	Date                 *time.Time
 	DateLastActivity     *time.Time
+	Due                  *time.Time
 	ChangeDueDate        bool
 	HistoryChangeDueDate []*time.Time
 }
 
-func New() {
-
+func (mc MyCard) New(card *trello.Card) (myCard MyCard) {
+	myCard.ID = card.ID
+	myCard.Name = card.Name
+	myCard.TimeGuessForDone = GetTimeGuessForDone(card.Name)
+	myCard.TimeRealForDone = GetRealTimeOfDone(card.Name)
+	myCard.DateLastActivity = card.DateLastActivity
+	myCard.Due = card.Due
+	myCard.HistoryChangeDueDate = nil
+	return
 }

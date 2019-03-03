@@ -2,13 +2,13 @@ package connectAPI
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
 
-	"net/http"
-
+	"../database"
+	"../modules"
+	"github.com/adlio/trello"
 	"github.com/sacOO7/gowebsocket"
 )
 
@@ -43,14 +43,37 @@ func UpdateDataOnDB(key string, token string, id_board string) {
 			socket.SendText("Give data for me")
 		} else {
 			// defer socket.SendText("data")
-			response, err := http.Get("https://api.trello.com/1/boards/" + id_board + "/cards?key=" + key + "&token=" + token)
-			if err != nil {
-				fmt.Printf("The HTTP request failed with error %s\n", err)
-			} else {
-				data, _ := ioutil.ReadAll(response.Body)
-				fmt.Println(string(data))
-				fmt.Printf("%T", data)
-			}
+			GetCards(key, token, id_board, func(cards []*trello.Card, err error) {
+				if err != nil {
+					// notify to admin
+				} else {
+					myCards := ConverseFromCardToMyCard(cards)
+					for k, v := range myCards {
+						database.FindOne(v.ID, func(result interface{}, err error) {
+							fmt.Println(k)
+							fmt.Println("res", result)
+							fmt.Println("Err", err)
+							// if result.ID != nil {
+
+							// }
+							if err != nil {
+								// database.InsertData(myCards[i], func(res *mongo.InsertOneResult, err error) {
+								// 	if err != nil {
+								// 		fmt.Println("Can't Insert")
+								// 	}
+								// 	fmt.Println("Inserted")
+								// })
+							} else {
+								CompareCards(result, v)
+							}
+						})
+
+					}
+
+				}
+
+			})
+
 		}
 	}
 
@@ -63,8 +86,6 @@ func UpdateDataOnDB(key string, token string, id_board string) {
 	}
 
 	socket.Connect()
-	// socket.SendText("data")
-	// socket.Close()
 	for {
 		select {
 		case <-interrupt:
@@ -74,4 +95,33 @@ func UpdateDataOnDB(key string, token string, id_board string) {
 
 		}
 	}
+}
+
+//@ Get all cardon board from trello api
+func GetCards(key, token, id string, fn func([]*trello.Card, error)) {
+	client := trello.NewClient(key, token)
+	board, err := client.GetBoard(id, trello.Defaults())
+	if err != nil {
+		fn(nil, err)
+	}
+	cards, err := board.GetCards(trello.Defaults())
+	if err != nil {
+		fn(nil, err)
+	}
+	fn(cards, nil)
+}
+
+//@ Conver cards from trello api to my card
+func ConverseFromCardToMyCard(card []*trello.Card) (myCards []modules.MyCard) {
+	var myCard modules.MyCard
+	for i := 0; i < len(card); i++ {
+		myCards = append(myCards, myCard.New(card[i]))
+	}
+	return
+}
+
+func CompareCards(cardOndb, cardOnTrello interface{}) {
+	fmt.Println(cardOndb)
+
+	// fmt.Println(cardOnTrello)
 }

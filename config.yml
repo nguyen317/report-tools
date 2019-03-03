@@ -8,10 +8,10 @@ server:
   host: localhost
   port: 3000
 
-db:
-    name:     namedb
-    user:     username
-    password: password
+database:
+    name:     mongodb
+    username:     roger
+    password: roger123
 
 contacts:
   email: ybuoceban.umbala@gmail.com
