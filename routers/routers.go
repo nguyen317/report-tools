@@ -12,7 +12,6 @@ func init() {
 }
 
 func SetupRouters() {
-	Routers.GET("/", controllers.Home)
-	// Routers.GET("/b/cards/review/:id", controllers.AllCardReview)
-	// Routers.GET("/b/cards/overdue/:id", controllers.AllCardOverDue)
+	Routers.GET("/b/cards/review/:id", controllers.AllCardReview)
+	Routers.GET("/b/cards/overdue/:id", controllers.AllCardChangeDueDate)
 }

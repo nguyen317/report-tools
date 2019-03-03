@@ -12,7 +12,7 @@ import (
 	"github.com/sacOO7/gowebsocket"
 )
 
-func UpdateDataOnDB(key string, token string, id_board string) {
+func CheckUpdateDataOnDB(key string, token string, id_board string) {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
