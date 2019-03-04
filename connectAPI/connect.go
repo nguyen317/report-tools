@@ -18,7 +18,6 @@ func UpdateDataOnDB(key string, token string, id_board string) {
 
 	socket := gowebsocket.New("ws://echo.websocket.org/")
 	socket.ConnectionOptions = gowebsocket.ConnectionOptions{
-		//Proxy: gowebsocket.BuildProxy("http://example.com"),
 		UseSSL:         false,
 		UseCompression: false,
 		Subprotocols:   []string{"chat", "superchat"},
@@ -42,38 +41,35 @@ func UpdateDataOnDB(key string, token string, id_board string) {
 		if message == "data" {
 			socket.SendText("Give data for me")
 		} else {
-			// defer socket.SendText("data")
+			defer socket.SendText("data")
 			GetCards(key, token, id_board, func(cards []*trello.Card, err error) {
 				if err != nil {
 					// notify to admin
 				} else {
-					myCards := ConverseFromCardToMyCard(cards)
-					for k, v := range myCards {
-						database.FindOne(v.ID, func(result interface{}, err error) {
-							fmt.Println(k)
-							fmt.Println("res", result)
-							fmt.Println("Err", err)
-							// if result.ID != nil {
+					myCards := ConverseFromCardToMyCard(key, token, cards)
 
-							// }
+					for _, v := range myCards {
+						// fmt.Println(v)
+						result, err := database.FindOne(v.ID)
+						if err != nil {
+							database.InsertData(v, func(err error) {
+								if err != nil {
+									fmt.Println("Can't insert")
+								}
+								fmt.Println("Inserted !")
+							})
+						} else {
+							card := CompareCards(result, v)
+							err := database.UpdateCard(card.ID, card)
 							if err != nil {
-								// database.InsertData(myCards[i], func(res *mongo.InsertOneResult, err error) {
-								// 	if err != nil {
-								// 		fmt.Println("Can't Insert")
-								// 	}
-								// 	fmt.Println("Inserted")
-								// })
+								fmt.Println("Can't Update")
 							} else {
-								CompareCards(result, v)
+								fmt.Println("Updated !")
 							}
-						})
-
+						}
 					}
-
 				}
-
 			})
-
 		}
 	}
 
@@ -111,17 +107,37 @@ func GetCards(key, token, id string, fn func([]*trello.Card, error)) {
 	fn(cards, nil)
 }
 
+func GetListbById(appKey string, token string, ID string) (*trello.List, error) {
+	client := trello.NewClient(appKey, token)
+	list, err := client.GetList(ID, trello.Defaults())
+	if err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
 //@ Conver cards from trello api to my card
-func ConverseFromCardToMyCard(card []*trello.Card) (myCards []modules.MyCard) {
+func ConverseFromCardToMyCard(key, token string, card []*trello.Card) (myCards []modules.MyCard) {
 	var myCard modules.MyCard
+
 	for i := 0; i < len(card); i++ {
-		myCards = append(myCards, myCard.New(card[i]))
+		list, err := GetListbById(key, token, card[i].IDList)
+		if err != nil {
+
+		}
+		myCards = append(myCards, myCard.New(card[i], list.Name))
 	}
 	return
 }
 
-func CompareCards(cardOndb, cardOnTrello interface{}) {
-	fmt.Println(cardOndb)
-
-	// fmt.Println(cardOnTrello)
+//@ Compare two card and return new card
+func CompareCards(cardOndb, cardOnTrello modules.MyCard) modules.MyCard {
+	if modules.CompareTwoTime(cardOndb.DateLastActivity, cardOnTrello.DateLastActivity) == false {
+		cardOndb.DateLastActivity = cardOnTrello.DateLastActivity
+	}
+	if modules.CompareTwoTime(cardOndb.Due, cardOnTrello.Due) == false {
+		cardOndb.Due = cardOnTrello.Due
+		cardOndb.HistoryChangeDueDate = modules.HandelHistory(cardOndb.HistoryChangeDueDate, cardOnTrello.Due)
+	}
+	return cardOndb
 }

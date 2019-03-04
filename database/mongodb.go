@@ -1,45 +1,52 @@
 package database
 
 import (
-	"context"
-	"time"
-
 	"../modules"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
-var client *mongo.Client
-var collection *mongo.Collection
+var collection *mgo.Collection
 
 func init() {
-	var err error
-	client, err = mongo.NewClient(options.Client().ApplyURI("mongodb://roger:roger123@ds213255.mlab.com:13255/report-tools"))
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
-	collection = client.Database("report-tools").Collection("cards")
+	session, err := mgo.Dial("mongodb://" + Config.Database.Username + ":" + Config.Database.Password + "@ds213255.mlab.com:13255/report-tools")
 	if err != nil {
 
 	}
+	session.SetMode(mgo.Monotonic, true)
+	collection = session.DB("report-tools").C("cards")
 }
 
-func InsertData(data interface{}, fn func(*mongo.InsertOneResult, error)) {
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	res, err := collection.InsertOne(ctx, data)
+func InsertData(data interface{}, fn func(error)) {
+	err := collection.Insert(data)
 	if err != nil {
-		fn(nil, err)
+		fn(err)
 	}
-	fn(res, nil)
+	fn(nil)
 }
 
-func FindOne(id string, fn func(interface{}, error)) {
+func FindOne(id string) (modules.MyCard, error) {
 	var card modules.MyCard
-	filter := bson.M{"id": id}
-	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-	err := collection.FindOne(ctx, filter).Decode(&card)
+	err := collection.Find(bson.M{"id": id}).One(&card)
 	if err != nil {
-		fn(nil, err)
+		return card, err
 	}
-	fn(card, nil)
+	return card, nil
+}
+
+func GetAllCard() ([]modules.MyCard, error) {
+	var cards []modules.MyCard
+	err := collection.Find(bson.M{}).All(&cards)
+	if err != nil {
+		return nil, err
+	}
+	return cards, nil
+}
+
+func UpdateCard(id string, data interface{}) error {
+	err := collection.Update(bson.M{"id": id}, bson.M{"$set": data})
+	if err != nil {
+		return err
+	}
+	return nil
 }

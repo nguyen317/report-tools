@@ -9,6 +9,8 @@ import (
 type MyCard struct {
 	ID                   string
 	Name                 string
+	ListName             string
+	IdList               string
 	TimeGuessForDone     int
 	TimeRealForDone      int
 	DateLastActivity     *time.Time
@@ -17,13 +19,15 @@ type MyCard struct {
 	HistoryChangeDueDate []*time.Time
 }
 
-func (mc MyCard) New(card *trello.Card) (myCard MyCard) {
+func (mc MyCard) New(card *trello.Card, listName string) (myCard MyCard) {
 	myCard.ID = card.ID
 	myCard.Name = card.Name
 	myCard.TimeGuessForDone = GetTimeGuessForDone(card.Name)
 	myCard.TimeRealForDone = GetRealTimeOfDone(card.Name)
 	myCard.DateLastActivity = card.DateLastActivity
+	myCard.ListName = listName
+	myCard.IdList = card.IDList
 	myCard.Due = card.Due
-	myCard.HistoryChangeDueDate = nil
+	myCard.HistoryChangeDueDate = HandelHistory(myCard.HistoryChangeDueDate, card.Due)
 	return
 }

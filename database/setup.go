@@ -2,32 +2,28 @@ package database
 
 import (
 	"../config"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"gopkg.in/mgo.v2"
 )
 
 var Config = config.ReadConfig()
 
-func NewDatabase(db interface{}) error {
-	var err error
+func NewDatabase() (interface{}, error) {
 	if Config.Database.Name == "mongodb" {
-		db, err = mongodb(Config.Database.Username, Config.Database.Password)
+		db, err := mongoDB(Config.Database.Username, Config.Database.Password)
 		if err != nil {
-			return err
+			return nil, err
 		} else {
-			return nil
+			return db, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
 
-func mongodb(username, password string) (*mongo.Client, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://" + username + ":" + password + "@ds213255.mlab.com:13255/report-tools"))
-
+func mongoDB(username, password string) (*mgo.Session, error) {
+	session, err := mgo.Dial("mongodb://roger:roger123@ds213255.mlab.com:13255/report-tools")
 	if err != nil {
 		return nil, err
 	}
-
-	return client, nil
-
+	session.SetMode(mgo.Monotonic, true)
+	return session, nil
 }
