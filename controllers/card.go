@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 	"time"
 
@@ -13,20 +12,35 @@ import (
 )
 
 func AllCardReview(c *gin.Context) {
-	q := c.Request.URL.Query()
-	result := strings.Split(q["list"][0], ",")
-
+	var count int
 	var data []interface{}
+	q := c.Request.URL.Query()
 
-	fmt.Println(result)
+	result := strings.Split(q["list"][0], ",")
+	if q["list"] == nil {
+		c.JSON(200, data)
+	}
+	if q["time"] != nil {
+		count, _ = strconv.Atoi(q["time"][0])
+
+	} else {
+		count = 7
+	}
+
 	cards, err := database.GetAllCard()
 	if err != nil {
 
 	} else {
+		now := time.Now()
 		for _, v := range result {
-			data = append(data, modules.Filter(cards, func(item modules.MyCard) bool {
+
+			data = append(data, modules.Filter(cards, func(i modules.MyCard) bool {
+				return func() int {
+					return int(i.DateLastActivity.Sub(now).Hours() / 24)
+				}()+count > 0
+			}), func(item modules.MyCard) bool {
 				return strings.ToLower(v) == strings.ToLower(item.ListName)
-			}))
+			})
 		}
 		c.JSON(200, data)
 	}
@@ -46,10 +60,12 @@ func AllCardChangeDueDate(c *gin.Context) {
 
 	} else {
 		now := time.Now()
-		c.JSON(200, modules.Filter(cards, func(item modules.MyCard) bool {
+		c.JSON(200, modules.Filter(modules.Filter(cards, func(item modules.MyCard) bool {
 			return func() int {
 				return int(item.DateLastActivity.Sub(now).Hours() / 24)
 			}()+count > 0
+		}), func(i modules.MyCard) bool {
+			return i.ChangeDueDate
 		}))
 	}
 }

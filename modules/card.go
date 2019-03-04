@@ -28,6 +28,7 @@ func (mc MyCard) New(card *trello.Card, listName string) (myCard MyCard) {
 	myCard.ListName = listName
 	myCard.IdList = card.IDList
 	myCard.Due = card.Due
+	myCard.ChangeDueDate = false
 	myCard.HistoryChangeDueDate = HandelHistory(myCard.HistoryChangeDueDate, card.Due)
 	return
 }

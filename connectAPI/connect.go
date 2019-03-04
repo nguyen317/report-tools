@@ -136,6 +136,7 @@ func CompareCards(cardOndb, cardOnTrello modules.MyCard) modules.MyCard {
 		cardOndb.DateLastActivity = cardOnTrello.DateLastActivity
 	}
 	if modules.CompareTwoTime(cardOndb.Due, cardOnTrello.Due) == false {
+		cardOndb.ChangeDueDate = true
 		cardOndb.Due = cardOnTrello.Due
 		cardOndb.HistoryChangeDueDate = modules.HandelHistory(cardOndb.HistoryChangeDueDate, cardOnTrello.Due)
 	}

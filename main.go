@@ -2,6 +2,7 @@ package main
 
 import (
 	"./config"
+	"./connectAPI"
 	"./routers"
 	"github.com/gin-gonic/gin"
 )
@@ -12,6 +13,6 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 	r := routers.Routers
 	routers.SetupRouters()
-	// connectAPI.UpdateDataOnDB(Config.App.Keyapp, Config.App.Token, Config.App.Idboard)
+	go connectAPI.UpdateDataOnDB(Config.App.Keyapp, Config.App.Token, Config.App.Idboard)
 	r.Run(":" + Config.Server.Port)
 }
