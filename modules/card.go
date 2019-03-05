@@ -32,3 +32,16 @@ func (mc MyCard) New(card *trello.Card, listName string) (myCard MyCard) {
 	myCard.HistoryChangeDueDate = HandelHistory(myCard.HistoryChangeDueDate, card.Due)
 	return
 }
+
+//@ Compare two card and return new card
+func (c MyCard) CompareTwoCards(cardOnTrello MyCard) MyCard {
+	if CompareTwoTime(c.DateLastActivity, cardOnTrello.DateLastActivity) == false {
+		c.DateLastActivity = cardOnTrello.DateLastActivity
+	}
+	if CompareTwoTime(c.Due, cardOnTrello.Due) == false {
+		c.ChangeDueDate = true
+		c.Due = cardOnTrello.Due
+		c.HistoryChangeDueDate = HandelHistory(c.HistoryChangeDueDate, cardOnTrello.Due)
+	}
+	return c
+}

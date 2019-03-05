@@ -9,12 +9,9 @@ import (
 var collection *mgo.Collection
 
 func init() {
-	session, err := mgo.Dial("mongodb://" + Config.Database.Username + ":" + Config.Database.Password + "@ds213255.mlab.com:13255/report-tools")
-	if err != nil {
-
-	}
-	session.SetMode(mgo.Monotonic, true)
-	collection = session.DB("report-tools").C("cards")
+	db, _ := NewDatabase()
+	db.Session.SetMode(mgo.Monotonic, true)
+	collection = db.Session.DB("report-tools").C("cards")
 }
 
 func InsertData(data interface{}, fn func(error)) {

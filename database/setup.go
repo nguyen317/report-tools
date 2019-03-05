@@ -7,16 +7,19 @@ import (
 
 var Config = config.ReadConfig()
 
-func NewDatabase() (interface{}, error) {
+type DB struct {
+	*mgo.Session
+}
+
+func NewDatabase() (*DB, error) {
 	if Config.Database.Name == "mongodb" {
 		db, err := mongoDB(Config.Database.Username, Config.Database.Password)
 		if err != nil {
-			return nil, err
-		} else {
-			return db, nil
+			return &DB{nil}, nil
 		}
+		return &DB{db}, nil
 	}
-	return nil, nil
+	return &DB{nil}, nil
 }
 
 func mongoDB(username, password string) (*mgo.Session, error) {

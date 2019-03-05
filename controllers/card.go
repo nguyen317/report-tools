@@ -22,7 +22,6 @@ func AllCardReview(c *gin.Context) {
 	}
 	if q["time"] != nil {
 		count, _ = strconv.Atoi(q["time"][0])
-
 	} else {
 		count = 7
 	}
@@ -33,14 +32,13 @@ func AllCardReview(c *gin.Context) {
 	} else {
 		now := time.Now()
 		for _, v := range result {
-
-			data = append(data, modules.Filter(cards, func(i modules.MyCard) bool {
+			data = append(data, modules.Filter(modules.Filter(cards, func(i modules.MyCard) bool {
 				return func() int {
 					return int(i.DateLastActivity.Sub(now).Hours() / 24)
 				}()+count > 0
 			}), func(item modules.MyCard) bool {
 				return strings.ToLower(v) == strings.ToLower(item.ListName)
-			})
+			}))
 		}
 		c.JSON(200, data)
 	}

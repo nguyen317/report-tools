@@ -3,6 +3,8 @@ package modules
 import (
 	"strconv"
 	"time"
+
+	"github.com/adlio/trello"
 )
 
 func init() {
@@ -63,4 +65,13 @@ func Filter(vs []MyCard, f func(MyCard) bool) (vsf []MyCard) {
 		}
 	}
 	return
+}
+
+//@ Map from *trello.Card to Mycard []modules.MyCard
+func MapFromTrelloCardToMyCard(vs []*trello.Card, f func(*trello.Card) MyCard) []MyCard {
+	vsm := make([]MyCard, len(vs))
+	for i, v := range vs {
+		vsm[i] = f(v)
+	}
+	return vsm
 }
